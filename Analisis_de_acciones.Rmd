@@ -5,3 +5,146 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+## Preparación inicial
+
+Se cargan las librerías necesarias.
+
+```{r librerias}
+pacman::p_load(corrplot,
+               readxl,
+               tidyverse)
+```
+
+## Descarga de datos
+
+Se cargan los datos de los activos necesarios.
+
+```{r datos}
+datos.bitcoin <- read_excel("data/Datos históricos del Bitcoin.xlsx")
+datos.ethereum <- read_excel("data/Datos históricos del Ethereum.xlsx")
+```
+
+Se comparan la misma cantidad de fechas de los activos.
+
+```{r correcciones, warning = FALSE, message = FALSE}
+# Cantidad de filas de los datos del bitcoin
+datos.bitcoin <- datos.bitcoin[1:nrow(datos.ethereum), ]
+
+# Formato de fecha
+datos.bitcoin$Fecha <- as.Date(datos.bitcoin$Fecha, format="%d.%m.%Y")
+datos.ethereum$Fecha <- as.Date(datos.ethereum$Fecha, format="%d.%m.%Y")
+
+# Se agregan columnas con el volumen en números para el bitcoin
+datos.bitcoin <- datos.bitcoin %>% 
+  mutate(miles = as.numeric(gsub("K", "", datos.bitcoin$Vol)) * 1000,
+         millones = as.numeric(gsub("M", "", datos.bitcoin$Vol)) * 1000000,
+         billones = as.numeric(gsub("B", "", datos.bitcoin$Vol)) * 1000000000)
+
+# Se juntan las columnas en una sola
+datos.bitcoin$Vol <- ifelse(!is.na(datos.bitcoin$miles), datos.bitcoin$miles, ifelse(!is.na(datos.bitcoin$millones), datos.bitcoin$millones, ifelse(!is.na(datos.bitcoin$billones), datos.bitcoin$billones, NA)))
+
+# Se eliminan las columnas innecesarias
+datos.bitcoin <- datos.bitcoin %>% 
+  select(-c("miles", "millones", "billones"))
+
+# Se agregan columnas con el volumen en números para el ethereum
+datos.ethereum <- datos.ethereum %>% 
+  mutate(miles = as.numeric(gsub("K", "", datos.ethereum$Vol)) * 1000,
+         millones = as.numeric(gsub("M", "", datos.ethereum$Vol)) * 1000000,
+         billones = as.numeric(gsub("B", "", datos.ethereum$Vol)) * 1000000000)
+
+# Se juntan las columnas en una sola
+datos.ethereum$Vol <- ifelse(!is.na(datos.ethereum$miles), datos.ethereum$miles, ifelse(!is.na(datos.ethereum$millones), datos.ethereum$millones, ifelse(!is.na(datos.ethereum$billones), datos.ethereum$billones, NA)))
+
+# Se eliminan las columnas innecesarias
+datos.ethereum <- datos.ethereum %>% 
+  select(-c("miles", "millones", "billones"))
+
+# Se rellenan los valores nulos con el último conocido
+datos.ethereum <- datos.ethereum %>% 
+  fill(Vol, .direction = "up")
+
+# Nombres de las columnas
+colnames(datos.bitcoin) <- c("fecha", "ultimo", "apertura", "maximo", "minimo", "volumen", "variacion")
+colnames(datos.ethereum) <- c("fecha", "ultimo", "apertura", "maximo", "minimo", "volumen", "variacion")
+```
+
+# Comparación de criptomonedas
+
+Se extienden las bases del bitcoin y de ethereum para tener algunas estadísticas descriptivas.
+
+```{r union_bases}
+# Datos del bitcoin extendidos
+resumen.btc <- datos.bitcoin %>% 
+  pivot_longer(-c(fecha))
+
+# Datos de ethereum extendidos
+resumen.etr <- datos.ethereum %>% 
+  pivot_longer(-c(fecha))
+```
+
+Se procede a realizar una tabla resumen de las criptomonedas.
+
+```{r resumen_criptos}
+# Resumen del bitcoin
+resumen.btc <- resumen.btc %>%
+  group_by(name) %>%
+  summarise(promedio = mean(value, na.rm = TRUE),
+            minimo = min(value, na.rm = TRUE),
+            mediana = quantile(value, 0.5),
+            maximo = max(value, na.rm = TRUE),
+            desviacion = sd(value, na.rm = TRUE))
+
+# Resumen de ethereum
+resumen.etr <- resumen.etr %>%
+  group_by(name) %>%
+  summarise(promedio = mean(value, na.rm = TRUE),
+            minimo = min(value, na.rm = TRUE),
+            mediana = quantile(value, 0.5),
+            maximo = max(value, na.rm = TRUE),
+            desviacion = sd(value, na.rm = TRUE))
+```
+
+Hacemos una matriz de correlación para observar si el comportamiento de las 2 criptomonedas tiene relación.
+
+```{r correlacion}
+# Correlaciones individuales
+correlaciones.btc <- cor(datos.bitcoin[, -1], datos.bitcoin[, -1])
+correlaciones.etr <- cor(datos.ethereum[, -1], datos.ethereum[, -1])
+
+# Correlaciones cruzadas
+correlaciones.cruz <- cor(datos.bitcoin[, -1], datos.ethereum[, -1])
+```
+
+Se realizan los gráficos de las matrices de correlación.
+
+```{r graficos_corr}
+# Correlación del bitcoin
+corrplot(correlaciones.btc, method = "color", type = "upper", order = "hclust", addCoef.col = "red3", number.cex = 0.7, number.digits = 3)
+
+# Correlación de ethereum
+corrplot(correlaciones.etr, method = "color", type = "upper", order = "hclust", addCoef.col = "red3", number.cex = 0.7, number.digits = 3)
+
+# Correlaciones cruzadas
+corrplot(correlaciones.cruz, method = "color", type = "upper", order = "hclust", addCoef.col = "red3", number.cex = 0.7, number.digits = 3)
+```
+
+Se realiza un gráfico comparativo de las variaciones diarias del bitcoin y de ethereum.
+
+```{r comparacion_variaciones}
+# # Dataframe auxiliar
+# df.auxiliar <- as.data.frame(cbind(datos.bitcoin$fecha, datos.bitcoin$variacion, datos.ethereum$variacion))
+# 
+# # Se corrigen los formatos de columna
+# colnames(df.auxiliar) <- c("fecha", "cambio_bct", "cambio_etr")
+# 
+# # Formato de fecha
+# df.auxiliar$fecha <- as.Date(df.auxiliar$fecha, format="%d.%m.%Y")
+# 
+# # Gráfico comparativo de varianzas diarias
+# ggplot(df.auxiliar, aes(x = fecha)) + 
+#   geom_point(aes(y = cambio_btc, color = "coral2"), size = 2) +
+#   labs(x = "Cambio etereum", y = "Cambio bitcoin", title = "Variación diaria entre etereum y bitcoin") +
+#   theme_minimal()
+```
+

@@ -132,19 +132,23 @@ corrplot(correlaciones.cruz, method = "color", type = "upper", order = "hclust",
 Se realiza un gráfico comparativo de las variaciones diarias del bitcoin y de ethereum.
 
 ```{r comparacion_variaciones}
-# # Dataframe auxiliar
-# df.auxiliar <- as.data.frame(cbind(datos.bitcoin$fecha, datos.bitcoin$variacion, datos.ethereum$variacion))
-# 
-# # Se corrigen los formatos de columna
-# colnames(df.auxiliar) <- c("fecha", "cambio_bct", "cambio_etr")
-# 
-# # Formato de fecha
-# df.auxiliar$fecha <- as.Date(df.auxiliar$fecha, format="%d.%m.%Y")
-# 
-# # Gráfico comparativo de varianzas diarias
-# ggplot(df.auxiliar, aes(x = fecha)) + 
-#   geom_point(aes(y = cambio_btc, color = "coral2"), size = 2) +
-#   labs(x = "Cambio etereum", y = "Cambio bitcoin", title = "Variación diaria entre etereum y bitcoin") +
-#   theme_minimal()
+# Dataframe auxiliar
+df.auxiliar <- as.data.frame(cbind(datos.bitcoin$fecha, datos.bitcoin$variacion, datos.ethereum$variacion))
+
+# Se corrigen los formatos de columna
+colnames(df.auxiliar) <- c("fecha", "cambio_btc", "cambio_etr")
+
+# Formato de fecha
+df.auxiliar$fecha <- as.Date(df.auxiliar$fecha, format="%d.%m.%Y")
+
+# Diferencias de las variaciones
+df.auxiliar <- df.auxiliar %>% 
+  mutate(diferencia = abs(cambio_btc - cambio_etr))
+
+# Gráfico comparativo de varianzas diarias
+ggplot(df.auxiliar, aes(x = fecha)) +
+  geom_line(aes(y = diferencia), color = "orangered2" , linewidth = 0.5) +
+  labs(x = "Cambio etereum", y = "Cambio bitcoin", title = "Variación diaria entre etereum y bitcoin") +
+  theme_minimal()
 ```
 

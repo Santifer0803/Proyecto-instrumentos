@@ -12,7 +12,8 @@ Se cargan las librerías necesarias.
 ```{r librerias}
 pacman::p_load(corrplot,
                readxl,
-               tidyverse)
+               tidyverse,
+               xtable)
 ```
 
 ## Descarga de datos
@@ -150,5 +151,17 @@ ggplot(df.auxiliar, aes(x = fecha)) +
   geom_line(aes(y = diferencia), color = "orangered2" , linewidth = 0.5) +
   labs(x = "Cambio etereum", y = "Cambio bitcoin", title = "Variación diaria entre etereum y bitcoin") +
   theme_minimal()
+```
+
+Se imprimen las tablas correspondientes.
+
+```{r impresion_tablas}
+# Se corrigen los nombres
+colnames(resumen.btc)[1] <- "variable"
+colnames(resumen.etr)[1] <- "variable"
+
+# Se imprime la tabla
+tabla_impresion <- xtable(resumen.btc)
+print(tabla_impresion, type = "latex", digits = 4)
 ```
 

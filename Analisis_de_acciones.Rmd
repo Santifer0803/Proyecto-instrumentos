@@ -121,13 +121,13 @@ Se realizan los gráficos de las matrices de correlación.
 
 ```{r graficos_corr}
 # Correlación del bitcoin
-corrplot(correlaciones.btc, method = "color", type = "upper", order = "hclust", addCoef.col = "red3", number.cex = 0.7, number.digits = 3)
+corrplot(correlaciones.btc, method = "color", type = "upper", order = "hclust", addCoef.col = "lightcoral", number.cex = 0.7, number.digits = 3)
 
 # Correlación de ethereum
-corrplot(correlaciones.etr, method = "color", type = "upper", order = "hclust", addCoef.col = "red3", number.cex = 0.7, number.digits = 3)
+corrplot(correlaciones.etr, method = "color", type = "upper", order = "hclust", addCoef.col = "lightcoral", number.cex = 0.7, number.digits = 3)
 
 # Correlaciones cruzadas
-corrplot(correlaciones.cruz, method = "color", type = "upper", order = "hclust", addCoef.col = "red3", number.cex = 0.7, number.digits = 3)
+corrplot(correlaciones.cruz, method = "color", type = "upper", order = "hclust", addCoef.col = "lightcoral", number.cex = 0.7, number.digits = 3)
 ```
 
 Se realiza un gráfico comparativo de las variaciones diarias del bitcoin y de ethereum.

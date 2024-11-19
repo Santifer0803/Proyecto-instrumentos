@@ -161,7 +161,7 @@ colnames(resumen.btc)[1] <- "variable"
 colnames(resumen.etr)[1] <- "variable"
 
 # Se imprime la tabla
-tabla_impresion <- xtable(resumen.btc)
+tabla_impresion <- xtable(resumen.etr)
 print(tabla_impresion, type = "latex", digits = 4)
 ```
 

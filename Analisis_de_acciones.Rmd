@@ -29,45 +29,83 @@ Se comparan la misma cantidad de fechas de los activos.
 
 ```{r correcciones, warning = FALSE, message = FALSE}
 # Cantidad de filas de los datos del bitcoin
-datos.bitcoin <- datos.bitcoin[1:nrow(datos.ethereum), ]
+datos.bitcoin <- datos.bitcoin[1:nrow(datos.ethereum),]
 
 # Formato de fecha
-datos.bitcoin$Fecha <- as.Date(datos.bitcoin$Fecha, format="%d.%m.%Y")
-datos.ethereum$Fecha <- as.Date(datos.ethereum$Fecha, format="%d.%m.%Y")
+datos.bitcoin$Fecha <-
+  as.Date(datos.bitcoin$Fecha, format = "%d.%m.%Y")
+datos.ethereum$Fecha <-
+  as.Date(datos.ethereum$Fecha, format = "%d.%m.%Y")
 
 # Se agregan columnas con el volumen en números para el bitcoin
-datos.bitcoin <- datos.bitcoin %>% 
-  mutate(miles = as.numeric(gsub("K", "", datos.bitcoin$Vol)) * 1000,
-         millones = as.numeric(gsub("M", "", datos.bitcoin$Vol)) * 1000000,
-         billones = as.numeric(gsub("B", "", datos.bitcoin$Vol)) * 1000000000)
+datos.bitcoin <- datos.bitcoin %>%
+  mutate(
+    miles = as.numeric(gsub("K", "", datos.bitcoin$Vol)) * 1000,
+    millones = as.numeric(gsub("M", "", datos.bitcoin$Vol)) * 1000000,
+    billones = as.numeric(gsub("B", "", datos.bitcoin$Vol)) * 1000000000
+  )
 
 # Se juntan las columnas en una sola
-datos.bitcoin$Vol <- ifelse(!is.na(datos.bitcoin$miles), datos.bitcoin$miles, ifelse(!is.na(datos.bitcoin$millones), datos.bitcoin$millones, ifelse(!is.na(datos.bitcoin$billones), datos.bitcoin$billones, NA)))
+datos.bitcoin$Vol <-
+  ifelse(
+    !is.na(datos.bitcoin$miles),
+    datos.bitcoin$miles,
+    ifelse(
+      !is.na(datos.bitcoin$millones),
+      datos.bitcoin$millones,
+      ifelse(!is.na(datos.bitcoin$billones), datos.bitcoin$billones, NA)
+    )
+  )
 
 # Se eliminan las columnas innecesarias
-datos.bitcoin <- datos.bitcoin %>% 
+datos.bitcoin <- datos.bitcoin %>%
   select(-c("miles", "millones", "billones"))
 
 # Se agregan columnas con el volumen en números para el ethereum
-datos.ethereum <- datos.ethereum %>% 
-  mutate(miles = as.numeric(gsub("K", "", datos.ethereum$Vol)) * 1000,
-         millones = as.numeric(gsub("M", "", datos.ethereum$Vol)) * 1000000,
-         billones = as.numeric(gsub("B", "", datos.ethereum$Vol)) * 1000000000)
+datos.ethereum <- datos.ethereum %>%
+  mutate(
+    miles = as.numeric(gsub("K", "", datos.ethereum$Vol)) * 1000,
+    millones = as.numeric(gsub("M", "", datos.ethereum$Vol)) * 1000000,
+    billones = as.numeric(gsub("B", "", datos.ethereum$Vol)) * 1000000000
+  )
 
 # Se juntan las columnas en una sola
-datos.ethereum$Vol <- ifelse(!is.na(datos.ethereum$miles), datos.ethereum$miles, ifelse(!is.na(datos.ethereum$millones), datos.ethereum$millones, ifelse(!is.na(datos.ethereum$billones), datos.ethereum$billones, NA)))
+datos.ethereum$Vol <-
+  ifelse(
+    !is.na(datos.ethereum$miles),
+    datos.ethereum$miles,
+    ifelse(
+      !is.na(datos.ethereum$millones),
+      datos.ethereum$millones,
+      ifelse(!is.na(datos.ethereum$billones), datos.ethereum$billones, NA)
+    )
+  )
 
 # Se eliminan las columnas innecesarias
-datos.ethereum <- datos.ethereum %>% 
+datos.ethereum <- datos.ethereum %>%
   select(-c("miles", "millones", "billones"))
 
 # Se rellenan los valores nulos con el último conocido
-datos.ethereum <- datos.ethereum %>% 
+datos.ethereum <- datos.ethereum %>%
   fill(Vol, .direction = "up")
 
 # Nombres de las columnas
-colnames(datos.bitcoin) <- c("fecha", "ultimo", "apertura", "maximo", "minimo", "volumen", "variacion")
-colnames(datos.ethereum) <- c("fecha", "ultimo", "apertura", "maximo", "minimo", "volumen", "variacion")
+colnames(datos.bitcoin) <-
+  c("fecha",
+    "ultimo",
+    "apertura",
+    "maximo",
+    "minimo",
+    "volumen",
+    "variacion")
+colnames(datos.ethereum) <-
+  c("fecha",
+    "ultimo",
+    "apertura",
+    "maximo",
+    "minimo",
+    "volumen",
+    "variacion")
 ```
 
 # Comparación de criptomonedas
@@ -119,36 +157,75 @@ correlaciones.cruz <- cor(datos.bitcoin[, -1], datos.ethereum[, -1])
 
 Se realizan los gráficos de las matrices de correlación.
 
-```{r graficos_corr}
+```{r graficos_corr_cripto}
+# Output de los gráficos
+par(mfrow = c(1, 2), mar = c(4, 4, 2, 1), oma = c(0, 0, 3, 0))
+
 # Correlación del bitcoin
-corrplot(correlaciones.btc, method = "color", type = "upper", order = "hclust", addCoef.col = "lightcoral", number.cex = 0.7, number.digits = 3)
+corrplot(
+  correlaciones.btc,
+  method = "color",
+  type = "upper",
+  order = "hclust",
+  addCoef.col = "lightcoral",
+  number.cex = 0.7,
+  number.digits = 3,
+  title = "Correlaciones del Bitcoin"
+)
 
 # Correlación de ethereum
-corrplot(correlaciones.etr, method = "color", type = "upper", order = "hclust", addCoef.col = "lightcoral", number.cex = 0.7, number.digits = 3)
-
-# Correlaciones cruzadas
-corrplot(correlaciones.cruz, method = "color", type = "upper", order = "hclust", addCoef.col = "lightcoral", number.cex = 0.7, number.digits = 3)
+corrplot(
+  correlaciones.etr,
+  method = "color",
+  type = "upper",
+  order = "hclust",
+  addCoef.col = "lightcoral",
+  number.cex = 0.7,
+  number.digits = 3,
+  title = "Correlaciones de Ethereum"
+)
 ```
+
+```{r corr_cruzado_cripto}
+# Correlaciones cruzadas
+corrplot(
+  correlaciones.cruz,
+  method = "color",
+  type = "upper",
+  order = "hclust",
+  addCoef.col = "lightcoral",
+  number.cex = 0.7,
+  number.digits = 3
+)
+```
+
 
 Se realiza un gráfico comparativo de las variaciones diarias del bitcoin y de ethereum.
 
 ```{r comparacion_variaciones}
 # Dataframe auxiliar
-df.auxiliar <- as.data.frame(cbind(datos.bitcoin$fecha, datos.bitcoin$variacion, datos.ethereum$variacion))
+df.auxiliar <-
+  as.data.frame(cbind(
+    datos.bitcoin$fecha,
+    datos.bitcoin$variacion,
+    datos.ethereum$variacion
+  ))
 
 # Se corrigen los formatos de columna
 colnames(df.auxiliar) <- c("fecha", "cambio_btc", "cambio_etr")
 
 # Formato de fecha
-df.auxiliar$fecha <- as.Date(df.auxiliar$fecha, format="%d.%m.%Y")
+df.auxiliar$fecha <- as.Date(df.auxiliar$fecha, format = "%d.%m.%Y")
 
 # Diferencias de las variaciones
-df.auxiliar <- df.auxiliar %>% 
+df.auxiliar <- df.auxiliar %>%
   mutate(diferencia = abs(cambio_btc - cambio_etr))
 
 # Gráfico comparativo de varianzas diarias
 ggplot(df.auxiliar, aes(x = fecha)) +
-  geom_line(aes(y = diferencia), color = "orangered2" , linewidth = 0.5) +
+  geom_line(aes(y = diferencia),
+            color = "orangered2" ,
+            linewidth = 0.5) +
   labs(x = "Cambio etereum", y = "Cambio bitcoin", title = "Variación diaria entre etereum y bitcoin") +
   theme_minimal()
 ```

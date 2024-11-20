@@ -159,7 +159,7 @@ Se realizan los gráficos de las matrices de correlación.
 
 ```{r graficos_corr_cripto}
 # Output de los gráficos
-par(mfrow = c(1, 2), mar = c(4, 4, 2, 1), oma = c(0, 0, 3, 0))
+par(mfrow = c(1, 2))
 
 # Correlación del bitcoin
 corrplot(
@@ -169,8 +169,7 @@ corrplot(
   order = "hclust",
   addCoef.col = "lightcoral",
   number.cex = 0.7,
-  number.digits = 3,
-  title = "Correlaciones del Bitcoin"
+  number.digits = 3
 )
 
 # Correlación de ethereum
@@ -181,8 +180,7 @@ corrplot(
   order = "hclust",
   addCoef.col = "lightcoral",
   number.cex = 0.7,
-  number.digits = 3,
-  title = "Correlaciones de Ethereum"
+  number.digits = 3
 )
 ```
 
@@ -226,7 +224,7 @@ ggplot(df.auxiliar, aes(x = fecha)) +
   geom_line(aes(y = diferencia),
             color = "orangered2" ,
             linewidth = 0.5) +
-  labs(x = "Cambio etereum", y = "Cambio bitcoin", title = "Variación diaria entre etereum y bitcoin") +
+  labs(x = "Cambio etereum", y = "Cambio bitcoin", caption = "Fuente: Elaboración propia") +
   theme_minimal()
 ```
 

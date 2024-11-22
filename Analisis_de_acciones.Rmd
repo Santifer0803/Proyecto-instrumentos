@@ -342,12 +342,12 @@ Se tienen que guardar las observaciones de ambos activos en las fechas en común
 ```{r filtrar_nvidia}
 # Se calcula la diferencia de días entre la última fecha del bitcoin y la
 # última fecha de NVIDIA
-diferencia_dias <-
+diferencia_dias_nvidia <-
   as.numeric(datos.bitcoin.original$fecha[1] - datos.nvidia$fecha[1]) + 1
 
 # Seleccionamos las observaciones del bitcoin usando la diferencia de días
 datos.bitcoin <-
-  datos.bitcoin.original[diferencia_dias:nrow(datos.bitcoin.original), ]
+  datos.bitcoin.original[diferencia_dias_nvidia:nrow(datos.bitcoin.original), ]
 
 # Filtramos los datos del bitcoin para que coincidan con la misma fecha que los
 # de NVIDIA
@@ -369,7 +369,7 @@ resumen.nvidia <- datos.nvidia %>%
   pivot_longer(-c(fecha))
 ```
 
-Calculamos algunas estadísticas descriptivas de ambos intrumentos. 
+Calculamos algunas estadísticas descriptivas de ambos instrumentos. 
 
 ```{r}
 # Resumen del bitcoin
@@ -493,4 +493,157 @@ print(tabla.btc, type = "latex", digits = 4)
 print(tabla.nvidia, type = "latex", digits = 4)
 ```
 
+# Comparación del Bitcoin con Apple
 
+```{r}
+diferencia_dias_apple <-
+  as.numeric(datos.bitcoin.original$fecha[1] - datos.apple$fecha[1]) + 1
+
+# Seleccionamos las observaciones del bitcoin usando la diferencia de días
+datos.bitcoin.apple <-
+  datos.bitcoin.original[diferencia_dias_apple:nrow(datos.bitcoin.original), ]
+
+# Filtramos los datos del bitcoin para que coincidan con la misma fecha que los
+# de NVIDIA
+datos.bitcoin.apple <- datos.bitcoin.apple[datos.bitcoin.apple$fecha %in% datos.apple$fecha, ]
+
+# Seleccionamos los datos de NVIDIA a partir de la fecha del primer dato del bitcoin
+datos.apple <- datos.apple[1:nrow(datos.bitcoin.apple), ]
+
+```
+
+Pivoteamos los datos del Bitcoin y de las acciones.
+
+```{r}
+# Datos del bitcoin extendidos
+resumen.btc.y.apple. <- datos.bitcoin.apple %>%
+  pivot_longer(-c(fecha))
+
+# Datos de nvidia extendidos
+resumen.apple <- datos.apple %>%
+  pivot_longer(-c(fecha))
+```
+
+Comparacion de ambos activos 
+```{r}
+# Resumen del bitcoin
+resumen.btc.y.apple. <- resumen.btc.y.apple. %>%
+  group_by(name) %>%
+  summarise(
+    promedio = mean(value, na.rm = TRUE),
+    minimo = min(value, na.rm = TRUE),
+    mediana = quantile(value, 0.5),
+    maximo = max(value, na.rm = TRUE),
+    desviacion = sd(value, na.rm = TRUE)
+  )
+
+# Resumen de Apple
+resumen.apple <- resumen.apple %>%
+  group_by(name) %>%
+  summarise(
+    promedio = mean(value, na.rm = TRUE),
+    minimo = min(value, na.rm = TRUE),
+    mediana = quantile(value, 0.5),
+    maximo = max(value, na.rm = TRUE),
+    desviacion = sd(value, na.rm = TRUE)
+  )
+```
+
+Calculamos las correlaciones individuales y conjunta.
+
+```{r}
+# Correlaciones individuales
+correlaciones.btc.con.apple <- cor(datos.bitcoin.apple[, -1], datos.bitcoin.apple[, -1])
+
+correlaciones.apple <- cor(datos.apple[, -1], datos.apple[, -1])
+
+# Correlaciones cruzadas
+correlaciones.cruzadas <- cor(datos.bitcoin.apple[, -1], datos.apple[, -1])
+```
+
+Graficamos las correlaciones.
+
+```{r}
+# Output de los gráficos
+par(mfrow = c(1, 2))
+
+# Correlación del bitcoin
+corrplot(
+  correlaciones.btc.con.apple,
+  method = "color",
+  type = "upper",
+  order = "hclust",
+  addCoef.col = "lightcoral",
+  number.cex = 0.7,
+  number.digits = 3
+)
+
+# Correlación de Apple
+corrplot(
+  correlaciones.apple,
+  method = "color",
+  type = "upper",
+  order = "hclust",
+  addCoef.col = "lightcoral",
+  number.cex = 0.7,
+  number.digits = 3
+)
+
+# Correlaciones cruzadas
+corrplot(
+  correlaciones.cruzadas,
+  method = "color",
+  type = "upper",
+  order = "hclust",
+  addCoef.col = "lightcoral",
+  number.cex = 0.7,
+  number.digits = 3
+)
+```
+
+Seguidamente realizamos el gráfico de la diferencia de las variaciones de cada instrumento.
+
+```{r}
+# Dataframe auxiliar
+df.aux.btc.apple <-
+  as.data.frame(cbind(
+    datos.bitcoin.apple$fecha,
+    datos.bitcoin.apple$variacion,
+    datos.apple$variacion
+  ))
+
+# Se corrigen los formatos de columna
+colnames(df.aux.btc.apple) <- c("fecha", "cambio_btc", "cambio_apple")
+
+# Formato de fecha
+df.aux.btc.apple$fecha <- as.Date(df.aux.btc.apple$fecha, format = "%d.%m.%Y")
+
+# Diferencias de las variaciones
+df.aux.btc.apple <- df.aux.btc.apple %>%
+  mutate(diferencia = abs(cambio_btc - cambio_apple))
+
+# Gráfico comparativo de varianzas diarias
+ggplot(df.aux.btc.apple, aes(x = fecha)) +
+  geom_line(aes(y = diferencia),
+            color = "darkgreen",
+            linewidth = 0.5) +
+  labs(x = "Tiempo", y = "Diferencia de las variaciones", 
+       caption = "Fuente: Elaboración propia") +
+  theme_minimal()
+```
+
+Por último, imprimimos las tablas correspondientes.
+
+```{r}
+# Se corrigen los nombres
+colnames(resumen.btc.y.apple.)[1] <- "variable"
+colnames(resumen.apple)[1] <- "variable"
+
+# Creamos las tablas
+tabla.btc.apple <- xtable(resumen.btc.y.apple.)
+tabla.apple <- xtable(resumen.apple)
+
+# Las imprimimos
+print(tabla.btc.apple, type = "latex", digits = 4)
+print(tabla.apple, type = "latex", digits = 4)
+```

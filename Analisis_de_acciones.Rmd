@@ -158,7 +158,7 @@ datos.bitcoin <- datos.bitcoin.original[1:nrow(datos.ethereum), ]
 resumen.btc <- datos.bitcoin %>%
   pivot_longer(-c(fecha))
 
-# Datos de ethereum extendidos
+# Datos del ethereum extendidos
 resumen.etr <- datos.ethereum %>%
   pivot_longer(-c(fecha))
 ```
@@ -281,26 +281,171 @@ Se imprimen las tablas correspondientes.
 colnames(resumen.btc)[1] <- "variable"
 colnames(resumen.etr)[1] <- "variable"
 
-# Se imprime la tabla
-tabla_impresion <- xtable(resumen.etr)
-print(tabla_impresion, type = "latex", digits = 4)
+# Creamos las tablas
+tabla.btc <- xtable(resumen.btc)
+tabla.etr <- xtable(resumen.etr)
+
+# Las imprimimos
+print(tabla.btc, type = "latex", digits = 4)
+print(tabla.etr, type = "latex", digits = 4)
 ```
 
 # Comparación del Bitcoin con NVIDIA
 
-```{r}
+Se tienen que guardar las observaciones de ambos activos en las fechas en común.
+
+```{r filtrar_nvidia}
 # Se calcula la diferencia de días entre la última fecha del bitcoin y la
 # última fecha de NVIDIA
-diferencia_dias <- 
+diferencia_dias <-
   as.numeric(datos.bitcoin.original$fecha[1] - datos.nvidia$fecha[1]) + 1
 
 # Seleccionamos las observaciones del bitcoin usando la diferencia de días
-datos.bitcoin <- 
+datos.bitcoin <-
   datos.bitcoin.original[diferencia_dias:nrow(datos.bitcoin.original), ]
+
+# Filtramos los datos del bitcoin para que coincidan con la misma fecha que los
+# de NVIDIA
+datos.bitcoin <- datos.bitcoin[datos.bitcoin$fecha %in% datos.nvidia$fecha, ]
+
+# Seleccionamos los datos de NVIDIA a partir de la fecha del primer dato del bitcoin
+datos.nvidia <- datos.nvidia[1:nrow(datos.bitcoin), ]
 ```
 
+Pivoteamos los datos del Bitcoin y de las acciones.
 
+```{r}
+# Datos del bitcoin extendidos
+resumen.btc <- datos.bitcoin %>%
+  pivot_longer(-c(fecha))
 
+# Datos de nvidia extendidos
+resumen.nvidia <- datos.nvidia %>%
+  pivot_longer(-c(fecha))
+```
 
+Calculamos algunas estadísticas descriptivas de ambos intrumentos. 
+
+```{r}
+# Resumen del bitcoin
+resumen.btc <- resumen.btc %>%
+  group_by(name) %>%
+  summarise(
+    promedio = mean(value, na.rm = TRUE),
+    minimo = min(value, na.rm = TRUE),
+    mediana = quantile(value, 0.5),
+    maximo = max(value, na.rm = TRUE),
+    desviacion = sd(value, na.rm = TRUE)
+  )
+
+# Resumen de NVIDIA
+resumen.nvidia <- resumen.nvidia %>%
+  group_by(name) %>%
+  summarise(
+    promedio = mean(value, na.rm = TRUE),
+    minimo = min(value, na.rm = TRUE),
+    mediana = quantile(value, 0.5),
+    maximo = max(value, na.rm = TRUE),
+    desviacion = sd(value, na.rm = TRUE)
+  )
+```
+
+Calculamos las correlaciones individuales y conjunta.
+
+```{r}
+# Correlaciones individuales
+correlaciones.btc <- cor(datos.bitcoin[, -1], datos.bitcoin[, -1])
+correlaciones.nvidia <- cor(datos.nvidia[, -1], datos.nvidia[, -1])
+
+# Correlaciones cruzadas
+correlaciones.cruz <- cor(datos.bitcoin[, -1], datos.nvidia[, -1])
+```
+
+Graficamos las correlaciones.
+
+```{r}
+# Output de los gráficos
+par(mfrow = c(1, 2))
+
+# Correlación del bitcoin
+corrplot(
+  correlaciones.btc,
+  method = "color",
+  type = "upper",
+  order = "hclust",
+  addCoef.col = "lightcoral",
+  number.cex = 0.7,
+  number.digits = 3
+)
+
+# Correlación de NVIDIA
+corrplot(
+  correlaciones.nvidia,
+  method = "color",
+  type = "upper",
+  order = "hclust",
+  addCoef.col = "lightcoral",
+  number.cex = 0.7,
+  number.digits = 3
+)
+
+# Correlaciones cruzadas
+corrplot(
+  correlaciones.cruz,
+  method = "color",
+  type = "upper",
+  order = "hclust",
+  addCoef.col = "lightcoral",
+  number.cex = 0.7,
+  number.digits = 3
+)
+```
+
+Seguidamente realizamos el gráfico de la diferencia de las variaciones de cada instrumento.
+
+```{r}
+# Dataframe auxiliar
+df.auxiliar <-
+  as.data.frame(cbind(
+    datos.bitcoin$fecha,
+    datos.bitcoin$variacion,
+    datos.nvidia$variacion
+  ))
+
+# Se corrigen los formatos de columna
+colnames(df.auxiliar) <- c("fecha", "cambio_btc", "cambio_nvidia")
+
+# Formato de fecha
+df.auxiliar$fecha <- as.Date(df.auxiliar$fecha, format = "%d.%m.%Y")
+
+# Diferencias de las variaciones
+df.auxiliar <- df.auxiliar %>%
+  mutate(diferencia = abs(cambio_btc - cambio_nvidia))
+
+# Gráfico comparativo de varianzas diarias
+ggplot(df.auxiliar, aes(x = fecha)) +
+  geom_line(aes(y = diferencia),
+            color = "royalblue",
+            linewidth = 0.5) +
+  labs(x = "Tiempo", y = "Diferencia de las variaciones", 
+       caption = "Fuente: Elaboración propia") +
+  theme_minimal()
+```
+
+Por último, imprimimos las tablas correspondientes.
+
+```{r}
+# Se corrigen los nombres
+colnames(resumen.btc)[1] <- "variable"
+colnames(resumen.nvidia)[1] <- "variable"
+
+# Creamos las tablas
+tabla.btc <- xtable(resumen.btc)
+tabla.nvidia <- xtable(resumen.nvidia)
+
+# Las imprimimos
+print(tabla.btc, type = "latex", digits = 4)
+print(tabla.nvidia, type = "latex", digits = 4)
+```
 
 

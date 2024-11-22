@@ -34,7 +34,7 @@ datos.nvidia <- read_excel("data/NVIDIA.xlsx")
 
 Se corrigen algunas características de las bases de datos a utilizar.
 
-```{r correcciones, warning = FALSE, message = FALSE}
+```{r correcciones_generales, warning = FALSE, message = FALSE}
 # Formato de fecha
 datos.bitcoin.original$Fecha <-
   as.Date(datos.bitcoin.original$Fecha, format = "%d.%m.%Y")
@@ -45,6 +45,12 @@ datos.ethereum$Fecha <-
 datos.nvidia$Date <-
   as.Date(datos.nvidia$Date, format = "%d.%m.%Y")
 
+datos.apple$Date <- 
+  as.Date(datos.apple$Date, format = "%d.%m,%Y")
+```
+
+
+```{r correcciones_datos_criptomonedas, warning = FALSE, message = FALSE}
 # Se agregan columnas con el volumen en números para el bitcoin
 datos.bitcoin.original <- datos.bitcoin.original %>%
   mutate(
@@ -101,22 +107,6 @@ datos.ethereum <- datos.ethereum %>%
 datos.ethereum <- datos.ethereum %>%
   fill(Vol, .direction = "up")
 
-# Se elimina la columna del último precio ajustado de la base de NVIDIA
-datos.nvidia <- datos.nvidia %>%
-  select(-c("Adj Close"))
-
-# Se agrega la columna de variación porcentual a la base de NVIDIA
-datos.nvidia <- datos.nvidia %>%
-  mutate(variacion = ((Close / lag(Close)) - 1))
-
-# Se intercambian las columnas de la base de NVIDIA
-datos.nvidia <- datos.nvidia %>%
-  select(Date, Close, Open, High, Low, Volume, variacion)
-
-# Se invierte el orden de las filas de la base de NVIDIA para que estén iguales
-# las demás
-datos.nvidia <- datos.nvidia[rev(rownames(datos.nvidia)), ]
-
 # Nombres de las columnas
 colnames(datos.bitcoin.original) <-
   c("fecha",
@@ -136,6 +126,28 @@ colnames(datos.ethereum) <-
     "volumen",
     "variacion")
 
+```
+
+
+```{r correcciones_datos_nvidia, warning = FALSE, message = FALSE}
+# Se elimina la columna del último precio ajustado de la base de NVIDIA
+datos.nvidia <- datos.nvidia %>%
+  select(-c("Adj Close"))
+
+
+# Se agrega la columna de variación porcentual a la base de NVIDIA
+datos.nvidia <- datos.nvidia %>%
+  mutate(variacion = ((Close / lag(Close)) - 1))
+
+# Se intercambian las columnas de la base de NVIDIA
+datos.nvidia <- datos.nvidia %>%
+  select(Date, Close, Open, High, Low, Volume, variacion)
+
+# Se invierte el orden de las filas de la base de NVIDIA para que estén iguales
+# las demás
+datos.nvidia <- datos.nvidia[rev(rownames(datos.nvidia)), ]
+
+# Nombres de las columnas
 colnames(datos.nvidia) <-
   c("fecha",
     "ultimo",
@@ -145,6 +157,39 @@ colnames(datos.nvidia) <-
     "volumen",
     "variacion")
 ```
+
+```{r correcciones_datos_apple}
+
+# Se elimina la columna del último precio ajustado de la base de Apple
+datos.apple <- datos.apple %>%
+  select(-c("Adj Close"))
+
+# Se agrega la columna de variación porcentual a la base de NVIDIA
+datos.apple <- datos.apple %>%
+  mutate(variacion = ((Close / lag(Close)) - 1))
+
+# Se intercambian las columnas de la base de Apple
+datos.apple <- datos.apple %>%
+  select(Date, Close, Open, High, Low, Volume, variacion)
+
+
+# Se invierte el orden de las filas de la base de NVIDIA para que estén iguales
+# las demás
+datos.apple <- datos.apple[rev(rownames(datos.apple)), ]
+
+#Nombre de las columnas
+colnames(datos.apple) <-
+  c("fecha",
+    "ultimo",
+    "apertura",
+    "maximo",
+    "minimo",
+    "volumen",
+    "variacion")
+
+```
+
+
 
 # Comparación de criptomonedas
 

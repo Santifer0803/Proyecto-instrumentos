@@ -359,7 +359,7 @@ datos.nvidia <- datos.nvidia[1:nrow(datos.bitcoin), ]
 
 Pivoteamos los datos del Bitcoin y de las acciones.
 
-```{r pivot_bitcoin_apple}
+```{r pivot_bitcoin_nvidia}
 # Datos del bitcoin extendidos
 resumen.btc <- datos.bitcoin %>%
   pivot_longer(-c(fecha))

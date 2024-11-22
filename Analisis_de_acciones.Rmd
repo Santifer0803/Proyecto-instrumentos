@@ -236,7 +236,7 @@ resumen.etr <- resumen.etr %>%
 
 Hacemos una matriz de correlación para observar si el comportamiento de las 2 criptomonedas tiene relación.
 
-```{r correlacion}
+```{r correlacion_criptos}
 # Correlaciones individuales
 correlaciones.btc <- cor(datos.bitcoin[, -1], datos.bitcoin[, -1])
 correlaciones.etr <- cor(datos.ethereum[, -1], datos.ethereum[, -1])
@@ -290,7 +290,7 @@ corrplot(
 
 Se realiza un gráfico comparativo de las variaciones diarias del bitcoin y de ethereum.
 
-```{r comparacion_variaciones}
+```{r comparacion_variaciones_criptos}
 # Dataframe auxiliar
 df.auxiliar <-
   as.data.frame(cbind(
@@ -321,7 +321,7 @@ ggplot(df.auxiliar, aes(x = fecha)) +
 
 Se imprimen las tablas correspondientes.
 
-```{r impresion_tablas}
+```{r impresion_tablas_criptos}
 # Se corrigen los nombres
 colnames(resumen.btc)[1] <- "variable"
 colnames(resumen.etr)[1] <- "variable"
@@ -359,7 +359,7 @@ datos.nvidia <- datos.nvidia[1:nrow(datos.bitcoin), ]
 
 Pivoteamos los datos del Bitcoin y de las acciones.
 
-```{r}
+```{r pivot_bitcoin_apple}
 # Datos del bitcoin extendidos
 resumen.btc <- datos.bitcoin %>%
   pivot_longer(-c(fecha))
@@ -371,7 +371,7 @@ resumen.nvidia <- datos.nvidia %>%
 
 Calculamos algunas estadísticas descriptivas de ambos instrumentos. 
 
-```{r}
+```{r resumen_bitcoin_nvidia}
 # Resumen del bitcoin
 resumen.btc <- resumen.btc %>%
   group_by(name) %>%
@@ -397,7 +397,7 @@ resumen.nvidia <- resumen.nvidia %>%
 
 Calculamos las correlaciones individuales y conjunta.
 
-```{r}
+```{r correlacion_bitcoin_nvidia}
 # Correlaciones individuales
 correlaciones.btc <- cor(datos.bitcoin[, -1], datos.bitcoin[, -1])
 correlaciones.nvidia <- cor(datos.nvidia[, -1], datos.nvidia[, -1])
@@ -408,7 +408,7 @@ correlaciones.cruz <- cor(datos.bitcoin[, -1], datos.nvidia[, -1])
 
 Graficamos las correlaciones.
 
-```{r}
+```{r graf_corr_bitcoin_nvidia}
 # Output de los gráficos
 par(mfrow = c(1, 2))
 
@@ -448,7 +448,7 @@ corrplot(
 
 Seguidamente realizamos el gráfico de la diferencia de las variaciones de cada instrumento.
 
-```{r}
+```{r variaciones_bitcoin_nvidia}
 # Dataframe auxiliar
 df.auxiliar <-
   as.data.frame(cbind(
@@ -479,7 +479,7 @@ ggplot(df.auxiliar, aes(x = fecha)) +
 
 Por último, imprimimos las tablas correspondientes.
 
-```{r}
+```{r impresion_tablas_bitcoin_nvidia}
 # Se corrigen los nombres
 colnames(resumen.btc)[1] <- "variable"
 colnames(resumen.nvidia)[1] <- "variable"
@@ -495,7 +495,7 @@ print(tabla.nvidia, type = "latex", digits = 4)
 
 # Comparación del Bitcoin con Apple
 
-```{r}
+```{r filtrar_apple}
 diferencia_dias_apple <-
   as.numeric(datos.bitcoin.original$fecha[1] - datos.apple$fecha[1]) + 1
 
@@ -514,18 +514,18 @@ datos.apple <- datos.apple[1:nrow(datos.bitcoin.apple), ]
 
 Pivoteamos los datos del Bitcoin y de las acciones.
 
-```{r}
+```{r pivot_bitcoin_apple}
 # Datos del bitcoin extendidos
 resumen.btc.y.apple. <- datos.bitcoin.apple %>%
   pivot_longer(-c(fecha))
 
-# Datos de nvidia extendidos
+# Datos de apple extendidos
 resumen.apple <- datos.apple %>%
   pivot_longer(-c(fecha))
 ```
 
 Comparacion de ambos activos 
-```{r}
+```{r resumen_bitcoin_apple}
 # Resumen del bitcoin
 resumen.btc.y.apple. <- resumen.btc.y.apple. %>%
   group_by(name) %>%
@@ -551,7 +551,7 @@ resumen.apple <- resumen.apple %>%
 
 Calculamos las correlaciones individuales y conjunta.
 
-```{r}
+```{r correlacion_bitcoin_apple}
 # Correlaciones individuales
 correlaciones.btc.con.apple <- cor(datos.bitcoin.apple[, -1], datos.bitcoin.apple[, -1])
 
@@ -563,7 +563,7 @@ correlaciones.cruzadas <- cor(datos.bitcoin.apple[, -1], datos.apple[, -1])
 
 Graficamos las correlaciones.
 
-```{r}
+```{r graf_corr_bitcoin_apple}
 # Output de los gráficos
 par(mfrow = c(1, 2))
 
@@ -603,7 +603,7 @@ corrplot(
 
 Seguidamente realizamos el gráfico de la diferencia de las variaciones de cada instrumento.
 
-```{r}
+```{r variaciones_bitcoin_apple}
 # Dataframe auxiliar
 df.aux.btc.apple <-
   as.data.frame(cbind(
@@ -634,7 +634,7 @@ ggplot(df.aux.btc.apple, aes(x = fecha)) +
 
 Por último, imprimimos las tablas correspondientes.
 
-```{r}
+```{r impresion_tablas_bitcoin_apple}
 # Se corrigen los nombres
 colnames(resumen.btc.y.apple.)[1] <- "variable"
 colnames(resumen.apple)[1] <- "variable"

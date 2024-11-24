@@ -2,7 +2,9 @@
 title: "Analisis_de_acciones"
 author: "Grupo de criptomonedas"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 # Librerías
@@ -647,3 +649,252 @@ tabla.apple <- xtable(resumen.apple)
 print(tabla.btc.apple, type = "latex", digits = 4)
 print(tabla.apple, type = "latex", digits = 4)
 ```
+
+# VaR MonteCarlo para Bitcoin 
+
+Vamos a descargar el precio de cotización de Bitcoin, utilizando función Ad, podemos cargar los datos desde la fecha máxima hasta el día del análisis, con fuente Yahoo Finance, esta función genera el vector en un objeto “xts”, por lo que los convertiremos en un vector númerico.
+
+```{r}
+library(quantmod)
+
+# Utilizamos las fechas que nos interesa para poder hacer una simulación
+maxDate <- "2024-10-12"
+minDate <- "2016-10-12"
+
+# Símbolo de Bitcoin en Yahoo Finance
+tickBTC <- "BTC-USD"
+
+# Obtener datos de Bitcoin
+p.bitcoin <- Ad(getSymbols(tickBTC, auto.assign = FALSE, from = minDate, to = maxDate))
+
+# Graficar precios ajustados
+plot(p.bitcoin, main = "Precio del Bitcoin (BTC-USD)", ylab = "Precio (USD)", xlab = "Fecha")
+```
+
+Una vez calculado el precio de las acciones, podemos ver como ha tenido una alta volatilidad, más en el periodo de del 2021 al 2024, ha presentado un comportamiento errático. 
+
+```{r}
+p.bitcoin <- as.numeric(p.bitcoin)
+```
+
+Ahora daremos paso al cálculo de los retornos, los cuales son calculados mediante la fórmula.
+
+$$
+r_t = Ln(\frac{P_t}{P_{t-1}})
+$$
+De donde tenemos que $P_t$ es el precio en el tiempo $t$.
+
+```{r}
+# Calculamos los retornos y lo guardamos en un data frame.
+retorno_bitcoin <- data.frame("r.bitcoin"=diff(log(p.bitcoin)))
+
+# Calculamos la media de los retornos
+media_r<-colMeans(retorno_bitcoin)
+
+# Visualizamos la media de los retornos
+media_r
+
+# Calculamos la varianza de los retornos
+varianza_r <- var(retorno_bitcoin)
+
+# Visualizamos la varianza de los retornos 
+varianza_r
+```
+
+
+
+
+
+```{r}
+library(quantmod)
+
+# Definimos los parámetros de la simulación 
+n_sims <- 1000  # Número de simulaciones
+n_periods <- 31 # Número de días a proyectar
+start_date <- "2024-10-12"  # Fecha inicial para el precio inicial
+
+# Precio inicial del 12-Octubre-2024
+S0 <- as.numeric(Ad(getSymbols("BTC-USD", auto.assign = FALSE, from = start_date, to = start_date)))
+
+# Creamos una matriz para almacenar las simulaciones
+precios_bitcoin <- matrix(, n_periods + 1, n_sims)
+precios_bitcoin[1, ] <- S0
+
+# Simulación de precios usando GBM
+for (i in 1:n_sims) {
+  for (j in 2:(n_periods + 1)) {
+    precios_bitcoin[j, i] <- precios_bitcoin[j - 1, i] * exp((media_r - (varianza_r^2) / 2) + varianza_r * rnorm(1))
+  }
+}
+
+# Generar el vector de días
+dias <- seq(0, n_periods)
+
+# Calculamos la tendencia (drift) y los intervalos de confianza
+Tendencia <- apply(precios_bitcoin, 1, mean)
+IC <- t(apply(precios_bitcoin, 1, quantile, probs = c(0.01, 0.05, 0.95, 0.99)))
+
+# Graficamos las simulaciones
+matplot(dias, precios_bitcoin, type = "l", col = "gray", lty = 1,
+        main = "Simulaciones de Precios Futuros de Bitcoin",
+        ylab = "Precio (USD)", xlab = "Días")
+lines(dias, Tendencia, col = "black", lwd = 2)
+lines(dias, IC[, 1], col = "blue", lwd = 1, lty = 2) 
+lines(dias, IC[, 4], col = "blue", lwd = 1, lty = 2) 
+lines(dias, IC[, 2], col = "red", lwd = 1, lty = 2)  
+lines(dias, IC[, 3], col = "red", lwd = 1, lty = 2)  
+legend("topleft", 
+       legend = c("Tendencia", "Intervalo 90%", "Intervalo 95%"),
+       lwd = c(2, 1, 1), 
+       col = c("black", "red", "blue"), 
+       lty = c(1, 2, 2), 
+       bty = "n")
+```
+
+
+
+
+
+```{r}
+library(quantmod) 
+library(knitr)     
+
+# Parámetros iniciales
+n_sims <- 1000
+n_periods <- 2
+
+# Fecha específica para el precio inicial
+start_date <- "2024-10-12"
+
+# Obtener el precio ajustado del Bitcoin para el 12 de octubre de 2024
+S0 <- as.numeric(Ad(getSymbols("BTC-USD", auto.assign = FALSE, from = start_date, to = start_date)))
+
+media_btc <- media_r               
+volatilidad_btc <- sqrt(varianza_r) 
+
+# Inicializamos los vectores para precios simulados y retornos
+precio_bitcoin <- numeric(n_periods + 1)
+precio_bitcoin[1] <- S0
+retornos_btc <- numeric(n_sims)
+
+# Simulación de Monte Carlo para el Bitcoin
+for (j in 1:n_sims) {
+  for (i in 2:(n_periods + 1)) {
+    Z <- rnorm(1)  
+    precio_bitcoin[i] <- precio_bitcoin[i - 1] * exp((media_btc - (volatilidad_btc^2) / 2) + volatilidad_btc * Z)
+  }
+  retornos_btc[j] <- log(precio_bitcoin[n_periods + 1] / S0)
+}
+
+# Calcular el VaR al 95% de confianza
+VaR_MC_Bitcoin <- quantile(retornos_btc, 0.05)
+kable(VaR_MC_Bitcoin, caption = "VaR Monte Carlo para Bitcoin")
+```
+
+
+
+
+
+
+```{r}
+media_btc <- mean(retorno_bitcoin$r.bitcoin) # Media de los retornos de Bitcoin
+varianza_btc <- var(retorno_bitcoin$r.bitcoin) # Varianza de los retornos de Bitcoin
+volatilidad_btc <- sqrt(varianza_btc) # Volatilidad de los retornos de Bitcoin
+
+# Inicializamos precios simulados
+n_sims <- 1000
+n_periods <- 2
+precios_simulados <- matrix(, n_periods + 1, n_sims)
+precios_simulados[1, ] <- S0
+
+# Simulación de Monte Carlo
+for (j in 1:n_sims) {
+  for (i in 2:(n_periods + 1)) {
+    Z <- rnorm(1) 
+    precios_simulados[i, j] <- precios_simulados[i - 1, j] * 
+      exp((media_btc - (volatilidad_btc^2) / 2) + volatilidad_btc * Z)
+  }
+}
+
+# Calculamos los retornos simulados
+retornos_simulados <- log(precios_simulados[n_periods + 1, ] / S0)
+
+
+par(mfrow = c(1, 2))
+hist(retornos_simulados, 
+     main = "Retornos Simulados a 1 Día", 
+     xlab = "Retornos", 
+     col = "skyblue", 
+     border = "white")
+hist(precios_simulados[n_periods + 1, ], 
+     main = "Precios Simulados a 1 Día", 
+     xlab = "Precios", 
+     col = "lightcoral", 
+     border = "white")
+```
+
+A continuación se visualiza como se ve el gráfico de las acciones para las fechas reales, las cuales se habían intentado simular. 
+
+```{r}
+library(quantmod)
+
+# Utilizamos las fechas que nos interesa para poder hacer una simulación
+maxDate <- "2024-11-12"
+minDate <- "2024-10-12"
+
+# Símbolo de Bitcoin en Yahoo Finance
+tickBTC <- "BTC-USD"
+
+# Obtener datos de Bitcoin
+p.bitcoin <- Ad(getSymbols(tickBTC, auto.assign = FALSE, from = minDate, to = maxDate))
+
+# Graficar precios ajustados
+plot(p.bitcoin, main = "Precio del Bitcoin (BTC-USD)", ylab = "Precio (USD)", xlab = "Fecha")
+```
+
+
+
+```{r}
+# Crear rango de días con fechas reales
+fechas_simuladas <- seq(as.Date("2024-10-12"), by = "day", length.out = n_periods + 1)
+fechas_reales <- index(p.bitcoin)
+
+# Crear índice para etiquetar cada 5 días y el 5 de noviembre
+indices_etiquetas <- c(seq(1, length(fechas_simuladas), by = 5), which(fechas_simuladas == "2024-11-05"))
+indices_etiquetas <- sort(unique(indices_etiquetas))
+
+# Graficar solo las simulaciones (sin las líneas grises)
+plot(dias, Tendencia, type = "l", col = "black", lwd = 2, lty = 1,
+     ylim = range(c(precios_bitcoin, p.bitcoin)),  # Rangos en la misma escala
+     main = "Comparación de Simulaciones de Precios con Precios Reales",
+     ylab = "Precio (USD)", xlab = "Fecha", xaxt = "n") 
+
+lines(dias, IC[, 1], col = "blue", lwd = 1, lty = 2)  
+lines(dias, IC[, 4], col = "blue", lwd = 1, lty = 2)  
+lines(dias, IC[, 2], col = "red", lwd = 1, lty = 2)  
+lines(dias, IC[, 3], col = "red", lwd = 1, lty = 2)   
+
+# Agregar precios reales
+lines(seq_along(fechas_reales), as.numeric(p.bitcoin), col = "green", lwd = 2, lty = 1)
+
+# Agregar línea vertical para el 5 de noviembre
+dia_vertical <- which(fechas_reales == "2024-11-05")  
+abline(v = dia_vertical, col = "purple", lwd = 2, lty = 2)
+axis(1, at = indices_etiquetas, labels = FALSE)  
+
+text(x = indices_etiquetas, 
+     y = par("usr")[3] - diff(par("usr")[3:4]) * 0.05, 
+     labels = format(fechas_simuladas[indices_etiquetas], "%d-%b"), 
+     srt = 45, adj = 1, xpd = TRUE, cex = 0.8)
+
+
+legend("topleft", 
+       legend = c("Tendencia (Simulaciones)", "Intervalo 90%", "Intervalo 95%", "Precios Reales", "5 Noviembre"),
+       lwd = c(2, 1, 1, 2, 2), 
+       col = c("black", "red", "blue", "green", "purple"), 
+       lty = c(1, 2, 2, 1, 2), 
+       bty = "n")
+```
+
+
+

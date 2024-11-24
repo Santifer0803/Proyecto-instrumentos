@@ -254,7 +254,7 @@ corrplot(
   method = "color",
   type = "upper",
   order = "hclust",
-  addCoef.col = "cornsilk4",
+  addCoef.col = "red",
   number.cex = 0.7,
   number.digits = 3
 )
@@ -265,7 +265,7 @@ corrplot(
   method = "color",
   type = "upper",
   order = "hclust",
-  addCoef.col = "cornsilk4",
+  addCoef.col = "red",
   number.cex = 0.7,
   number.digits = 3
 )
@@ -278,7 +278,7 @@ corrplot(
   method = "color",
   type = "upper",
   order = "hclust",
-  addCoef.col = "cornsilk4",
+  addCoef.col = "red",
   number.cex = 0.7,
   number.digits = 3
 )
@@ -414,7 +414,7 @@ corrplot(
   method = "color",
   type = "upper",
   order = "hclust",
-  addCoef.col = "cornsilk4",
+  addCoef.col = "lightcoral",
   number.cex = 0.7,
   number.digits = 3
 )
@@ -425,7 +425,7 @@ corrplot(
   method = "color",
   type = "upper",
   order = "hclust",
-  addCoef.col = "cornsilk4",
+  addCoef.col = "lightcoral",
   number.cex = 0.7,
   number.digits = 3
 )
@@ -438,7 +438,7 @@ corrplot(
   method = "color",
   type = "upper",
   order = "hclust",
-  addCoef.col = "cornsilk4",
+  addCoef.col = "lightcoral",
   number.cex = 0.7,
   number.digits = 3
 )
